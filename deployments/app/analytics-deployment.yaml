@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analytics
+  template:
+    metadata:
+      labels:
+        app: analytics
+    spec:
+      containers:
+      - name: analytics
+        image: 436713843511.dkr.ecr.us-east-1.amazonaws.com/mahaanalytics:v1   # Replace this with your ECR image URI later
+        ports:
+          - containerPort: 5153
+        envFrom:
+          - configMapRef:
+              name: analytics-config
+          - secretRef:
+              name: analytics-secret
+        livenessProbe:
+          httpGet:
+            path: /health_check
+            port: 5153
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /health_check
+            port: 5153
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
