@@ -5,28 +5,24 @@ env:
     AWS_DEFAULT_REGION: us-east-1
     ECR_REPO: mahaanalytics
     ECR_REGISTRY: 436713843511.dkr.ecr.us-east-1.amazonaws.com
+    IMAGE_TAG: latest
 
 phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-      - echo Deriving IMAGE_TAG from commit SHA
-      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)
-      - echo "IMAGE_TAG=$IMAGE_TAG"
   build:
     commands:
-      - echo Building Docker image from deployments/app ...
+      - echo Building Docker image...
       - cd deployments/app
       - docker build -t $ECR_REPO:$IMAGE_TAG .
       - docker tag $ECR_REPO:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
   post_build:
     commands:
-      - echo Pushing image to ECR...
+      - echo Pushing Docker image to ECR...
       - docker push $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG
-      - echo "Image successfully pushed to ECR as $ECR_REGISTRY/$ECR_REPO:$IMAGE_TAG"
-      - echo Build completed on $(date)
+      - echo Build completed successfully at `date`
 artifacts:
   files:
     - '**/*'
-  discard-paths: yes
